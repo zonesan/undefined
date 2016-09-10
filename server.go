@@ -8,9 +8,8 @@ import (
 	"net"
 	"net/http"
 	"time"
-
-	//"io"
-	//"strings"
+	"io"
+	"strings"
 	//"bufio"
 
 	"github.com/gorilla/websocket"
@@ -18,9 +17,9 @@ import (
 	"github.com/zonesan/undefined/chat"
 )
 
-//====================================================================
-// home page
-//====================================================================
+const (
+	MaxBufferOutputBytes = 1024
+)
 
 func getTemplateFilePath(tn string) string {
 	return "template/" + tn
@@ -58,7 +57,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if httpTemplate == nil {
-		httpTemplate, err = template.ParseFiles(getTemplateFilePath("index.html"))
+		httpTemplate, err = template.ParseFiles(getTemplateFilePath("home-old.html"))
 		if err != nil {
 			sendPageData(w, []byte("Parse template error."), "text/plain; charset=utf-8")
 			return
@@ -83,17 +82,14 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 // ChatConn
 //====================================================================
 
-const (
-	MaxBufferOutputBytes = 1024
-)
-
 type ChatConn struct { // implement chat.ReadWriteCloser
 	*websocket.Conn
 
 	InputBuffer  bytes.Buffer
-	OutputBuffer bytes.Buffer
+	//OutputBuffer bytes.Buffer
 }
 
+/*
 func (cc *ChatConn) ReadFromBuffer(b []byte, from int) int {
 	to := len(b) - from
 	if to > cc.InputBuffer.Len() {
@@ -123,27 +119,87 @@ func (cc *ChatConn) MergeOutputBuffer(newb []byte) []byte {
 	//var from = 0
 	//for from < new_n {
 	//	all_b[to] = newb[from]
-	//	from++
-	//	to++
+	//  from++
+	//  to++
 	//}
 	copy(all_b[old_n:], newb)
 
 	return all_b
 }
+*/
 
 //====================================================================
 // ChatConn implements net.Conn
 //====================================================================
 
+
 func (cc *ChatConn) Read(b []byte) (int, error) {
+	// read from buffer
+	//bs := []byte{1,   0, 1, 12, 2, 22,   2,   0, 2, 12, 1, 22}
+	//nn := copy(b, bs)
+	//return nn, nil
+
+	index := 0
+	n, err := cc.InputBuffer.Read(b)
+	index += n
+	if err == io.EOF {
+		return index, nil
+	} else if err != nil {
+fmt.Println("000 err = ", err)
+		return index, err
+	}
+
+	if index == len(b) {
+		return index, nil
+	}
+
+	for {
+		// try to read more message data and cache it
+		messageType, p, err := cc.ReadMessage()
+fmt.Println("11 messageType=", messageType, ", err=", err)
+
+		if err != nil && err != io.EOF {
+			return index, err
+		}
+
+		if messageType != websocket.BinaryMessage { // only accept BinaryMessage messages
+			continue
+		}
+
+		_, err2 := cc.InputBuffer.Write(p) // cache it
+
+fmt.Println("22 err2=", err2)
+
+		if err2 != nil {
+			return index, err2
+		}
+
+		if err == io.EOF || cc.InputBuffer.Len() >= MaxBufferOutputBytes {
+			break
+		}
+	}
+
+	// read from buffer again
+
+	n, err = cc.InputBuffer.Read(b[index:])
+	index += n
+	if err != nil && err != io.EOF {
+		return index, err
+	}
+
+	return index, nil
+}
+
+/*
+func (cc *ChatConn) Read2(b []byte) (int, error) {
 	var from = 0
 	from = cc.ReadFromBuffer(b, from)
 	if from == len(b) {
 		return from, nil
 	}
 
-	var messageType, p, err = cc.ReadMessage()
-	if err != nil || messageType != websocket.BinaryMessage { // only BinaryMessage is suppported now
+	var messageType, p, err = cc.Conn.ReadMessage()
+	if err != nil || messageType != websocket.TextMessage { // only TextMessage is suppported now
 		return from, err
 	}
 
@@ -161,8 +217,14 @@ func (cc *ChatConn) Read(b []byte) (int, error) {
 
 	return from, nil
 }
+*/
 
-func (cc *ChatConn) Write(newb []byte) (int, error) {
+func (cc *ChatConn) Write(b []byte) (int, error) {
+	return len(b), cc.WriteMessage(websocket.BinaryMessage, b) // todo: maybe not ok
+}
+
+/*
+func (cc *ChatConn) Write2(newb []byte) (int, error) {
 	b := cc.MergeOutputBuffer(newb)
 
 	var n = len(b)
@@ -172,7 +234,7 @@ func (cc *ChatConn) Write(newb []byte) (int, error) {
 	for to < n {
 		if b[to] == '\n' {
 			if to-from > 0 {
-				err = cc.WriteMessage(websocket.TextMessage, b[from:to+1])
+				err = cc.Conn.WriteMessage(websocket.TextMessage, b[from:to+1])
 				if err != nil {
 					break
 				}
@@ -193,6 +255,7 @@ func (cc *ChatConn) Write(newb []byte) (int, error) {
 
 	return len(newb), nil
 }
+*/
 
 func (cc *ChatConn) SetDeadline(t time.Time) error {
 	var err = cc.SetReadDeadline(t)
@@ -207,6 +270,8 @@ func (cc *ChatConn) SetDeadline(t time.Time) error {
 // ...
 //====================================================================
 
+const PrefixWS = "/ws/"
+
 var wsUpgrader = websocket.Upgrader{
 	ReadBufferSize:  512,
 	WriteBufferSize: 512,
@@ -219,13 +284,19 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if (! strings.HasPrefix(r.URL.Path, PrefixWS)) || len(r.URL.Path) <= len(PrefixWS) {
+		http.Error(w, "bad uri", 400)
+		return
+	}
+	roomId := r.URL.Path[len(PrefixWS):]
+
 	var wsConn, err = wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
 
-	chatServer.OnNewConnection(&ChatConn{Conn: wsConn})
+	chatServer.OnNewConnection(&ChatConn{Conn: wsConn}, roomId)
 }
 
 func createWebsocketServer(port int) {
@@ -233,7 +304,7 @@ func createWebsocketServer(port int) {
 	log.Printf("Websocket listening at :%d ...\n", port)
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	http.HandleFunc("/ws", websocketHandler)
+	http.HandleFunc(PrefixWS, websocketHandler) // /ws/:rommid
 	http.HandleFunc("/", httpHandler)
 
 	var address = fmt.Sprintf(":%d", port)
@@ -259,7 +330,7 @@ func createSocketServer(port int) {
 		if err != nil {
 			log.Printf("General socket accept new connection error: %s\n", err.Error())
 		} else {
-			chatServer.OnNewConnection(conn)
+			chatServer.OnNewConnection(conn, "")
 		}
 	}
 }

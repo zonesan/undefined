@@ -17,15 +17,23 @@ type Server struct {
 	Visitors map[string]*Visitor
 	ToExit   chan int
 
-	PendingConnections chan net.Conn
+	PendingConnections chan PendingConn
 	ChangeRoomRequests chan *Visitor
 	ChangeNameRequests chan *Visitor
 
 	RegexpBraces *regexp.Regexp
 }
 
-func (server *Server) CreateMessage(who string, what string) string {
-	return fmt.Sprintf("[%s] %s> %s\n", time.Now().Local().Format("15:04:05"), who, what)
+type PendingConn struct {
+	conn        net.Conn
+	initialRoom string
+}
+
+//func (server *Server) CreateMessage(who string, what string) string {
+//	return fmt.Sprintf("[%s] %s> %s\n", time.Now().Local().Format("15:04:05"), who, what)
+//}
+func (server *Server) CreateMessage(who string, what string) []byte {
+	return []byte(fmt.Sprintf("[%s] %s> %s\n", time.Now().Local().Format("15:04:05"), who, what))
 }
 
 func (server *Server) NormalizeName(name string) string {
@@ -50,7 +58,7 @@ func (server *Server) run() {
 	server.Visitors = make(map[string]*Visitor)
 	server.ToExit = make(chan int, 1)
 
-	server.PendingConnections = make(chan net.Conn, MaxPendingConnections)
+	server.PendingConnections = make(chan PendingConn, MaxPendingConnections)
 	server.ChangeRoomRequests = make(chan *Visitor, MaxBufferedChangeRoomRequests)
 	server.ChangeNameRequests = make(chan *Visitor, MaxBufferedChangeNameRequests)
 
@@ -61,10 +69,10 @@ func (server *Server) run() {
 	go func(server *Server) {
 		for {
 			select {
-			case conn := <-server.PendingConnections:
-				var visitor = server.createNewVisitor(conn, server.CreateRandomVisitorName())
+			case pendingConn := <-server.PendingConnections:
+				var visitor = server.createNewVisitor(pendingConn.conn, server.CreateRandomVisitorName(), pendingConn.initialRoom)
 				if visitor != nil {
-					visitor.OutputMessages <- server.CreateMessage("Server", fmt.Sprintf("your name: %s. You can input /name new_name to change your name.", visitor.Name))
+					//visitor.OutputMessages <- server.CreateMessage("Server", fmt.Sprintf("your name: %s. You can input /name new_name to change your name.", visitor.Name))
 					go visitor.run()
 				}
 			case visitor := <-server.ChangeNameRequests:
@@ -93,8 +101,8 @@ func (server *Server) run() {
 	<-server.ToExit
 }
 
-func (server *Server) OnNewConnection(conn net.Conn) {
-	server.PendingConnections <- conn
+func (server *Server) OnNewConnection(conn net.Conn, initialRoom string) {
+	server.PendingConnections <- PendingConn{conn, initialRoom}
 }
 
 func CreateChatServer() *Server {

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
-	"io"
+	//"io"
 	"log"
 	"net"
 	"strings"
@@ -14,14 +14,15 @@ type Visitor struct {
 	Server *Server
 
 	Connection     net.Conn
-	LimitInput     *io.LimitedReader
-	Input          *bufio.Reader
+	//LimitInput     *io.LimitedReader
+	//Input          *bufio.Reader
 	Output         *bufio.Writer
-	OutputMessages chan string
+	OutputMessages chan []byte
 
 	Name     string
 	NextName string
 
+	LocalIdInRoom byte
 	RoomElement *list.Element // in CurrentRoom.Visitors
 	CurrentRoom *Room
 	NextRoomID  string
@@ -32,12 +33,14 @@ type Visitor struct {
 	Closed      chan int
 }
 
-func (server *Server) createNewVisitor(c net.Conn, name string) *Visitor {
+func (server *Server) createNewVisitor(c net.Conn, name string, initialRoom string) *Visitor {
 	var visitor = &Visitor{
 		Server: server,
 
+		LocalIdInRoom : 0,
+
 		Connection:     c,
-		OutputMessages: make(chan string, MaxVisitorBufferedMessages),
+		OutputMessages: make(chan []byte, MaxVisitorBufferedMessages),
 
 		Name:     name,
 		NextName: "",
@@ -52,13 +55,15 @@ func (server *Server) createNewVisitor(c net.Conn, name string) *Visitor {
 		Closed:      make(chan int),
 	}
 
-	visitor.LimitInput = &io.LimitedReader{c, 0}
-	visitor.Input = bufio.NewReader(visitor.LimitInput)
+	//visitor.LimitInput = &io.LimitedReader{c, 0}
+	//visitor.Input = bufio.NewReader(visitor.LimitInput)
+	//visitor.Input = bufio.NewReader(c)
 	visitor.Output = bufio.NewWriter(c)
 
 	server.Visitors[strings.ToLower(name)] = visitor
 
-	visitor.beginChangingRoom(LobbyRoomID)
+	//visitor.beginChangingRoom(LobbyRoomID)
+	visitor.beginChangingRoom(initialRoom)
 
 	log.Printf("New visitor: %s", visitor.Name)
 
@@ -93,7 +98,7 @@ func (visitor *Visitor) changeName() {
 	visitor.Name = newName
 	server.Visitors[strings.ToLower(visitor.Name)] = visitor
 
-	visitor.OutputMessages <- server.CreateMessage("Server", fmt.Sprintf("you changed your name to %s", visitor.Name))
+	//visitor.OutputMessages <- server.CreateMessage("Server", fmt.Sprintf("you changed your name to %s", visitor.Name))
 }
 
 func (server *Server) destroyVisitor(visitor *Visitor) {
@@ -128,6 +133,13 @@ func (visitor *Visitor) endChangingRoom() {
 	close(visitor.RoomChanged)
 }
 
+func (visitor *Visitor) newVisitorMessage(data[] byte) []byte {
+	message := make([]byte, len(data) + 1)
+	copy(message[0:], data)
+	message[len(data)] = visitor.LocalIdInRoom
+	return message
+}
+
 func (visitor *Visitor) run() {
 	go visitor.read()
 	go visitor.write()
@@ -142,10 +154,24 @@ func (visitor *Visitor) run() {
 
 func (visitor *Visitor) read() {
 	var server = visitor.Server
+	_ = server
 
-	var MaxNumBytesPerMessage int64 = (MaxMessageLength << 2) + 1
-	visitor.LimitInput.N = MaxNumBytesPerMessage
-	var inReadingLongMessage bool = false
+	//visitor.LimitInput.N = MaxMessageLength
+	//var inReadingLongMessage bool = false
+
+	var DATA [MaxMessageLength]byte
+	data := DATA[:]
+
+	var index int
+	var command int
+	var done bool
+
+	reset := func() {
+		index = 0
+		command = -1
+		done = false
+	}
+	reset()
 
 	for {
 		select {
@@ -160,6 +186,61 @@ func (visitor *Visitor) read() {
 
 		<-visitor.RoomChanged // wait server change room for vistor, when server has done it, this channel will be closed.
 
+fmt.Println("000 command=", command)
+		switch command {
+		default: // command is not confirmed yet
+			dataLength := 1
+			if index >= dataLength {
+				goto EXIT
+			}
+			n, err := visitor.Connection.Read(data[index:dataLength])
+
+fmt.Println("111 aaaa, ", n, ", err = ", err)
+			if err != nil { // todo: check io.EOF
+				goto EXIT
+			}
+			index += n
+			if index == dataLength {
+				command = int(data[0])
+			}
+
+fmt.Println("111 bbb, ", command)
+		case Command_MousePosition:
+			dataLength := 5
+			if index >= dataLength {
+				goto EXIT
+			}
+			n, err := visitor.Connection.Read(data[index:dataLength])
+
+fmt.Println("222 aaaa, ", n)
+			if err != nil { // todo: check io.EOF
+				goto EXIT
+			}
+			index += n
+			if index == dataLength {
+				done = true
+			}
+
+fmt.Println("222 bbb, ", index)
+		case Command_MouseDown, Command_MouseUp:
+
+fmt.Println("333 aaaa, ")
+
+			dataLength := 1
+			if index != dataLength {
+				goto EXIT
+			}
+			if index == dataLength {
+				done = true
+			}
+		}
+
+		if done {
+			visitor.OutputMessages <- visitor.newVisitorMessage(data[:index])
+			reset()
+		}
+
+		/*
 		var line, err = visitor.Input.ReadString('\n') // todo: use io.LimitedReader insstead
 		if err != nil {
 			if err != io.EOF || line == "" {
@@ -222,6 +303,7 @@ func (visitor *Visitor) read() {
 				visitor.CurrentRoom.Messages <- server.CreateMessage(visitor.Name, line)
 			}
 		}
+		*/
 	}
 
 EXIT:
@@ -239,7 +321,7 @@ func (visitor *Visitor) write() {
 		case <-visitor.Closed:
 			goto EXIT
 		case message := <-visitor.OutputMessages:
-			num, err := visitor.Output.WriteString(message)
+			num, err := visitor.Output.Write(message)
 			_ = num
 			if err != nil {
 				goto EXIT
@@ -248,7 +330,8 @@ func (visitor *Visitor) write() {
 			for {
 				select {
 				case message = <-visitor.OutputMessages:
-					num, err = visitor.Output.WriteString(message)
+					//num, err = visitor.Output.WriteString(message)
+					num, err = visitor.Output.Write(message)
 					_ = num
 					if err != nil {
 						goto EXIT
