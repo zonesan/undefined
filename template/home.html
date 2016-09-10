@@ -25,6 +25,13 @@
 <script src="../static/js/jquery-2.1.3.min.js"></script>
 <script src="../static/js/pixi.js"></script>
 <script>
+    // var colorArray = new Array(8)
+
+    // for(var i=0;i<8;i++){
+    //     colorArray[i]=(Math.random()*0xFFFFFF<<0).toString(16);
+    // }
+    var colorArray=[9876548765,12345765,765431234,7654346,654324,65432,65431243676,765234354657]
+
     Array.prototype.add = function (item) {
         this.push(item);
         if (this.callback) this.callback.call(this, item);
@@ -119,7 +126,7 @@
             if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
 
                 context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
-                context.lineStyle(5, 0x1099bb, 1);
+                context.lineStyle(5, colorArray[userId], 1);
                 context.lineTo(x, y);
                 renderer.render(stage);
             }
@@ -174,7 +181,11 @@
         return false;
     }
 
-
+    window.onresize = function(event) {
+        var canvasw = $(window).get(0).innerWidth
+        var canvash = $(window).get(0).innerHeight
+        var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
+    };
     var canvasw = $(window).get(0).innerWidth
     var canvash = $(window).get(0).innerHeight
     var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
