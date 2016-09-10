@@ -30,18 +30,18 @@
     // for(var i=0;i<8;i++){
     //     colorArray[i]=(parseInt(Math.random()*0xFFFFFF).toString(16));
     // }
-    var colorArray=[0x337d22,0xa93c67,0x941a1a,0x5e326b,0x7043b3,0x43b34e,0x438db3,0x434ab3]
+    var colorArray = [0x337d22, 0xa93c67, 0x941a1a, 0x5e326b, 0x7043b3, 0x43b34e, 0x438db3, 0x434ab3]
     console.log(colorArray)
 
     Array.prototype.add = function (item) {
         this.push(item);
         if (this.callback) this.callback.call(this, item);
     }
-//    alert(window.location.pathname)
+    //    alert(window.location.pathname)
     var Drawarr = new Array();
     var lastobj = [];
-    var webSocket = new WebSocket('ws://'+window.location.host + "/ws" + window.location.pathname);
-//    var webSocket = new WebSocket('ws://172.18.3.122:1337');
+    var webSocket = new WebSocket('ws://' + window.location.host + "/ws" + window.location.pathname);
+    //    var webSocket = new WebSocket('ws://172.18.3.122:1337');
     webSocket.binaryType = 'arraybuffer';
 
     webSocket.onerror = function (event) {
@@ -56,11 +56,11 @@
         onMessage(event)
     };
 
-    function person(index, x, y, mosueDown){
-         this.seatIndex= index;
-         this.mouseDown = mosueDown;
-         this.mouseX=x;
-         this.mouseY=y;
+    function person(index, x, y, mosueDown) {
+        this.seatIndex = index;
+        this.mouseDown = mosueDown;
+        this.mouseX = x;
+        this.mouseY = y;
     }
     var MaxRoomCapacity = 8
     var persons = new Array(MaxRoomCapacity)
@@ -77,7 +77,7 @@
         }
 
         var oldStatus = new person(user.seatIndex, user.mouseX, user.mouseY, user.mouseDown)
-    
+
         user.mouseX = x
         user.mouseY = y
         user.mouseDown = mouseDown
@@ -86,22 +86,22 @@
     }
 
     // ...
-	var Command_MousePosition = 0
+    var Command_MousePosition = 0
 
-	var Command_UserInfo = 254
-	var Command_ServerVersion = 255
+    var Command_UserInfo = 254
+    var Command_ServerVersion = 255
     /*
-    var command
-    var command = -1
-    var commandDone = false
-    var index = 0
+     var command
+     var command = -1
+     var commandDone = false
+     var index = 0
 
-    var reset = function() {
-        command = -1
-        commandDone = false
-        index = 0
-    }
-    */
+     var reset = function() {
+     command = -1
+     commandDone = false
+     index = 0
+     }
+     */
 
     function onMessage(event) {
         //onsole.log(event);
@@ -111,30 +111,30 @@
         // console.log(bytearray)
 
         switch (bytearray[0]) {
-        case Command_MousePosition:
+            case Command_MousePosition:
 
-            var x = canvasw * ((bytearray[1] << 8) | (bytearray[2] << 0)) / 0xFFFF
-            var y = canvash * ((bytearray[3] << 8) | (bytearray[4] << 0)) / 0xFFFF
-            var mouseDown = bytearray[5] != 0
-            var userId = bytearray[6]
-            
-            // console.log("x=", x, ",y=", y, ",mouseDown=", mouseDown, ",userId=", userId)
+                var x = canvasw * ((bytearray[1] << 8) | (bytearray[2] << 0)) / 0xFFFF
+                var y = canvash * ((bytearray[3] << 8) | (bytearray[4] << 0)) / 0xFFFF
+                var mouseDown = bytearray[5] != 0
+                var userId = bytearray[6]
 
-            var personLastStatus = updatePersonStatus(userId, x, y, mouseDown)
+                // console.log("x=", x, ",y=", y, ",mouseDown=", mouseDown, ",userId=", userId)
 
-            // console.log("personLastStatus=", personLastStatus)
+                var personLastStatus = updatePersonStatus(userId, x, y, mouseDown)
 
-            if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
+                // console.log("personLastStatus=", personLastStatus)
 
-                context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
-                context.lineStyle(5, parseInt(colorArray[userId]), 1);
-                context.lineTo(x, y);
-                renderer.render(stage);
-            }
+                if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
 
-            break;
-        default:
-            break;
+                    context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
+                    context.lineStyle(5, parseInt(colorArray[userId]), 1);
+                    context.lineTo(x, y);
+                    renderer.render(stage);
+                }
+
+                break;
+            default:
+                break;
         }
     }
 
@@ -148,14 +148,14 @@
 
     function start(e, type) {
 //        var data = {name: 'my',color: 'red', type: type, clientX: e.clientX - stage_info.left, clientY: e.clientY - stage_info.top};
-        
+
 
         if (type == 'moveup') {
-        } else if (e.clientX > canvasw 
-            || e.clientX < 0
-            || e.clientY > canvash
-            || e.clientY < 0){
-            type ='moveup'
+        } else if (e.clientX > canvasw
+                || e.clientX < 0
+                || e.clientY > canvash
+                || e.clientY < 0) {
+            type = 'moveup'
         }
 
         var mouseDown = 1
@@ -178,7 +178,7 @@
         return false;
     }
 
-    window.onresize = function(event) {
+    window.onresize = function (event) {
         var canvasw = $(window).get(0).innerWidth
         var canvash = $(window).get(0).innerHeight
         var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
@@ -192,29 +192,29 @@
     var stage = new PIXI.Container();
     var context = new PIXI.Graphics();
     var style = {
-        font : 'bold italic 20px Arial',
-        fill : '#F7EDCA',
-        stroke : '#4a1850',
-        strokeThickness : 5,
-        dropShadow : true,
-        dropShadowColor : '#000000',
-        dropShadowAngle : Math.PI / 6,
-        dropShadowDistance : 6,
-        wordWrap : true,
-        wordWrapWidth : canvasw
+        font: 'bold italic 20px Arial',
+        fill: '#F7EDCA',
+        stroke: '#4a1850',
+        strokeThickness: 5,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 6,
+        wordWrap: true,
+        wordWrapWidth: canvasw
     };
 
-    var richText = new PIXI.Text(location.href,style);
+    var richText = new PIXI.Text(location.href, style);
     richText.x = 20;
     richText.y = 20;
-//    richText.interactive = true;
-//    richText.on('click', onDown);
-//
-//    function onDown (eventData) {
-////        copyText('www.baidu.com');
-//        document.execCommand('www.baidu.com'); //执行浏览器复制命令
-//        alert("已复制好，可贴粘。");
-//    }
+    //    richText.interactive = true;
+    //    richText.on('click', onDown);
+    //
+    //    function onDown (eventData) {
+    ////        copyText('www.baidu.com');
+    //        document.execCommand('www.baidu.com'); //执行浏览器复制命令
+    //        alert("已复制好，可贴粘。");
+    //    }
     stage.addChild(richText);
     stage.addChild(context);
 
@@ -246,23 +246,23 @@
         var touch = null;
 
         switch (evt.type) {
-            case "touchstart": 
-            type = "mousedown";
-            touch = evt.changedTouches[0];
-            break;
+            case "touchstart":
+                type = "mousedown";
+                touch = evt.changedTouches[0];
+                break;
             case "touchmove":
-            type = "mousemove";
-            touch = evt.changedTouches[0];
-            break;
-            case "touchend":        
-            type = "mouseup";
-            touch = evt.changedTouches[0];
-            break;
+                type = "mousemove";
+                touch = evt.changedTouches[0];
+                break;
+            case "touchend":
+                type = "mouseup";
+                touch = evt.changedTouches[0];
+                break;
         }
 
         newEvt.initMouseEvent(type, true, true, evt.originalTarget.ownerDocument.defaultView, 0,
-            touch.screenX, touch.screenY, touch.clientX, touch.clientY,
-            evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
+                touch.screenX, touch.screenY, touch.clientX, touch.clientY,
+                evt.ctrlKey, evt.altKey, evt.shiftKey, evt.metaKey, 0, null);
         evt.originalTarget.dispatchEvent(newEvt);
     }
 
