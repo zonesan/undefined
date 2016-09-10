@@ -28,9 +28,10 @@
     // var colorArray = new Array(8)
 
     // for(var i=0;i<8;i++){
-    //     colorArray[i]=(Math.random()*0xFFFFFF<<0).toString(16);
+    //     colorArray[i]=(parseInt(Math.random()*0xFFFFFF).toString(16));
     // }
-    var colorArray=[9876548765,12345765,765431234,7654346,654324,65432,65431243676,765234354657]
+    var colorArray=[0x337d22,0xa93c67,0x941a1a,0x5e326b,0x7043b3,0x43b34e,0x438db3,0x434ab3]
+    console.log(colorArray)
 
     Array.prototype.add = function (item) {
         this.push(item);
@@ -107,7 +108,7 @@
 
         var bytearray = new Uint8Array(event.data);
         //console.log(bytearray.length)
-        console.log(bytearray)
+        // console.log(bytearray)
 
         switch (bytearray[0]) {
         case Command_MousePosition:
@@ -126,7 +127,7 @@
             if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
 
                 context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
-                context.lineStyle(5, colorArray[userId], 1);
+                context.lineStyle(5, parseInt(colorArray[userId]), 1);
                 context.lineTo(x, y);
                 renderer.render(stage);
             }
@@ -151,15 +152,15 @@
         
  
 
-        // if (e.clientX > canvasw 
-        //     || e.clientX < 0
-        //     || e.clientY > canvash
-        //     || e.clientY < 0){
-        //     type ='moveup'
+        if (e.clientX > canvasw 
+            || e.clientX < 0
+            || e.clientY > canvash
+            || e.clientY < 0){
+            type ='moveup'
 
-        // }else{
-        //     type='movedown'
-        // }
+        }else{
+            type='movedown'
+        }
 
         if (type == 'moveup') {
             mouseDown = 0
@@ -207,7 +208,7 @@
         wordWrapWidth : canvasw
     };
 
-    var richText = new PIXI.Text('姓名:逸杯酒,网址:www.baidu.com',style);
+    var richText = new PIXI.Text(location.href,style);
     richText.x = 20;
     richText.y = 20;
 //    richText.interactive = true;
