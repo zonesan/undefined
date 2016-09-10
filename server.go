@@ -57,7 +57,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if httpTemplate == nil {
-		httpTemplate, err = template.ParseFiles(getTemplateFilePath("home-old.html"))
+		httpTemplate, err = template.ParseFiles(getTemplateFilePath("home.html"))
 		if err != nil {
 			sendPageData(w, []byte("Parse template error."), "text/plain; charset=utf-8")
 			return
@@ -141,6 +141,10 @@ func (cc *ChatConn) Read(b []byte) (int, error) {
 
 	index := 0
 	n, err := cc.InputBuffer.Read(b)
+
+if n != 0 {
+fmt.Println("000 n = ", n, ", err = ", err)
+}
 	index += n
 	if err == io.EOF {
 		return index, nil

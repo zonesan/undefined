@@ -186,7 +186,7 @@ func (visitor *Visitor) read() {
 
 		<-visitor.RoomChanged // wait server change room for vistor, when server has done it, this channel will be closed.
 
-fmt.Println("000 command=", command)
+//fmt.Println("000 command=", command)
 		switch command {
 		default: // command is not confirmed yet
 			dataLength := 1
@@ -195,7 +195,7 @@ fmt.Println("000 command=", command)
 			}
 			n, err := visitor.Connection.Read(data[index:dataLength])
 
-fmt.Println("111 aaaa, ", n, ", err = ", err)
+//fmt.Println("111 aaaa, ", n, ", err = ", err)
 			if err != nil { // todo: check io.EOF
 				goto EXIT
 			}
@@ -204,7 +204,7 @@ fmt.Println("111 aaaa, ", n, ", err = ", err)
 				command = int(data[0])
 			}
 
-fmt.Println("111 bbb, ", command)
+//fmt.Println("111 bbb, ", command)
 		case Command_MousePosition:
 			dataLength := 5
 			if index >= dataLength {
@@ -212,7 +212,7 @@ fmt.Println("111 bbb, ", command)
 			}
 			n, err := visitor.Connection.Read(data[index:dataLength])
 
-fmt.Println("222 aaaa, ", n)
+//fmt.Println("222 aaaa, ", n)
 			if err != nil { // todo: check io.EOF
 				goto EXIT
 			}
@@ -221,10 +221,10 @@ fmt.Println("222 aaaa, ", n)
 				done = true
 			}
 
-fmt.Println("222 bbb, ", index)
+//fmt.Println("222 bbb, ", index)
 		case Command_MouseDown, Command_MouseUp:
 
-fmt.Println("333 aaaa, ")
+//fmt.Println("333 aaaa, ")
 
 			dataLength := 1
 			if index != dataLength {
@@ -236,6 +236,8 @@ fmt.Println("333 aaaa, ")
 		}
 
 		if done {
+
+fmt.Println("5555 command = ", command, ": ", data[:index])
 			visitor.OutputMessages <- visitor.newVisitorMessage(data[:index])
 			reset()
 		}
