@@ -206,7 +206,7 @@ fmt.Println("111 aaaa, ", n, ", err = ", err)
 
 fmt.Println("111 bbb, ", command)
 		case Command_MousePosition:
-			dataLength := 5
+			dataLength := 6
 			if index >= dataLength {
 				goto EXIT
 			}
@@ -217,19 +217,6 @@ fmt.Println("222 aaaa, ", n)
 				goto EXIT
 			}
 			index += n
-			if index == dataLength {
-				done = true
-			}
-
-fmt.Println("222 bbb, ", index)
-		case Command_MouseDown, Command_MouseUp:
-
-fmt.Println("333 aaaa, ")
-
-			dataLength := 1
-			if index != dataLength {
-				goto EXIT
-			}
 			if index == dataLength {
 				done = true
 			}
