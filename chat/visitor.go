@@ -225,7 +225,7 @@ fmt.Println("222 aaaa, ", n)
 		if done {
 
 fmt.Println("5555 command = ", command, ": ", data[:index])
-			visitor.OutputMessages <- visitor.newVisitorMessage(data[:index])
+			visitor.CurrentRoom.Messages <- visitor.newVisitorMessage(data[:index])
 			reset()
 		}
 

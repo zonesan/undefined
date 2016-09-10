@@ -49,8 +49,8 @@
     };
 
     function person(index, x, y, mosueDown){
-         this.seatindex= index;
-         this.mousedown = mosueDown;
+         this.seatIndex= index;
+         this.mouseDown = mosueDown;
          this.mouseX=x;
          this.mouseY=y;
     }
@@ -68,11 +68,11 @@
             return null
         }
 
-        var oldStatus = new person(user.userId, user.mouseX, user.mouseY, user.mouseDown)
+        var oldStatus = new person(user.seatIndex, user.mouseX, user.mouseY, user.mouseDown)
     
         user.mouseX = x
         user.mouseY = y
-        user.mousedown = mouseDown
+        user.mouseDown = mouseDown
 
         return oldStatus
     }
@@ -99,19 +99,25 @@
         //onsole.log(event);
 
         var bytearray = new Uint8Array(event.data);
-        console.log(bytearray.length)
-        console.log(bytearray)
+        //console.log(bytearray.length)
+        //console.log(bytearray)
 
         switch (bytearray[0]) {
         case Command_MousePosition:
+
             var x = canvasw * ((bytearray[1] << 8) | (bytearray[2] << 0)) / 0xFFFF
             var y = canvash * ((bytearray[3] << 8) | (bytearray[4] << 0)) / 0xFFFF
             var mouseDown = bytearray[5] != 0
             var userId = bytearray[6]
+            
+            console.log("x=", x, ",y=", y, ",mouseDown=", mouseDown, ",userId=", userId)
 
             var personLastStatus = updatePersonStatus(userId, x, y, mouseDown)
+
+            console.log("personLastStatus=", personLastStatus)
+
             if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
-                
+
                 context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
                 context.lineStyle(5, 0x1099bb, 1);
                 context.lineTo(x, y);
