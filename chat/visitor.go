@@ -195,7 +195,6 @@ func (visitor *Visitor) read() {
 			}
 			n, err := visitor.Connection.Read(data[index:dataLength])
 
-fmt.Println("111 aaaa, ", n, ", err = ", err)
 			if err != nil { // todo: check io.EOF
 				goto EXIT
 			}
@@ -204,7 +203,6 @@ fmt.Println("111 aaaa, ", n, ", err = ", err)
 				command = int(data[0])
 			}
 
-fmt.Println("111 bbb, ", command)
 		case Command_MousePosition:
 			dataLength := 6
 			if index >= dataLength {
@@ -212,7 +210,6 @@ fmt.Println("111 bbb, ", command)
 			}
 			n, err := visitor.Connection.Read(data[index:dataLength])
 
-fmt.Println("222 aaaa, ", n)
 			if err != nil { // todo: check io.EOF
 				goto EXIT
 			}
@@ -223,8 +220,6 @@ fmt.Println("222 aaaa, ", n)
 		}
 
 		if done {
-
-fmt.Println("5555 command = ", command, ": ", data[:index])
 			visitor.CurrentRoom.Messages <- visitor.newVisitorMessage(data[:index])
 			reset()
 		}
