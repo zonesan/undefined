@@ -100,7 +100,7 @@
 
         var bytearray = new Uint8Array(event.data);
         //console.log(bytearray.length)
-        //console.log(bytearray)
+        console.log(bytearray)
 
         switch (bytearray[0]) {
         case Command_MousePosition:
@@ -110,11 +110,11 @@
             var mouseDown = bytearray[5] != 0
             var userId = bytearray[6]
             
-            console.log("x=", x, ",y=", y, ",mouseDown=", mouseDown, ",userId=", userId)
+            // console.log("x=", x, ",y=", y, ",mouseDown=", mouseDown, ",userId=", userId)
 
             var personLastStatus = updatePersonStatus(userId, x, y, mouseDown)
 
-            console.log("personLastStatus=", personLastStatus)
+            // console.log("personLastStatus=", personLastStatus)
 
             if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
 
@@ -142,6 +142,18 @@
         var mouseDown = 1
 //        var data = {name: 'my',color: 'red', type: type, clientX: e.clientX - stage_info.left, clientY: e.clientY - stage_info.top};
         
+ 
+
+        // if (e.clientX > canvasw 
+        //     || e.clientX < 0
+        //     || e.clientY > canvash
+        //     || e.clientY < 0){
+        //     type ='moveup'
+
+        // }else{
+        //     type='movedown'
+        // }
+
         if (type == 'moveup') {
             mouseDown = 0
         }
@@ -154,12 +166,15 @@
         var y0 = (percentY >> 0) & 0xFF
         var arr = [0, x1, x0, y1, y0, mouseDown]
 
+
 //        console.log(arr);
         var batesArray = new Uint8Array(arr);
         //console.log(batesArray);
         webSocket.send(batesArray.buffer);
         return false;
     }
+
+
     var canvasw = $(window).get(0).innerWidth
     var canvash = $(window).get(0).innerHeight
     var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
