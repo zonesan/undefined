@@ -39,7 +39,7 @@
     canvas.setAttribute('height', canvasHeight);
     var context = canvas.getContext('2d');
     var hasmy = false;
-    var webSocket = new WebSocket('ws://172.18.3.122:1337');
+    var webSocket = new WebSocket('ws://' + location.host + '/ws');
 
     webSocket.onerror = function (event) {
         onError(event);

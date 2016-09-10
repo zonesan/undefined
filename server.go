@@ -18,9 +18,9 @@ import (
 	"github.com/zonesan/undefined/chat"
 )
 
-const (
-	MaxBufferOutputBytes = 1024
-)
+//====================================================================
+// home page
+//====================================================================
 
 func getTemplateFilePath(tn string) string {
 	return "template/" + tn
@@ -58,7 +58,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if httpTemplate == nil {
-		httpTemplate, err = template.ParseFiles(getTemplateFilePath("home.html"))
+		httpTemplate, err = template.ParseFiles(getTemplateFilePath("index.html"))
 		if err != nil {
 			sendPageData(w, []byte("Parse template error."), "text/plain; charset=utf-8")
 			return
@@ -83,8 +83,12 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 // ChatConn
 //====================================================================
 
+const (
+	MaxBufferOutputBytes = 1024
+)
+
 type ChatConn struct { // implement chat.ReadWriteCloser
-	Conn *websocket.Conn
+	*websocket.Conn
 
 	InputBuffer  bytes.Buffer
 	OutputBuffer bytes.Buffer
@@ -119,8 +123,8 @@ func (cc *ChatConn) MergeOutputBuffer(newb []byte) []byte {
 	//var from = 0
 	//for from < new_n {
 	//	all_b[to] = newb[from]
-	//  from++
-	//  to++
+	//	from++
+	//	to++
 	//}
 	copy(all_b[old_n:], newb)
 
@@ -138,8 +142,8 @@ func (cc *ChatConn) Read(b []byte) (int, error) {
 		return from, nil
 	}
 
-	var messageType, p, err = cc.Conn.ReadMessage()
-	if err != nil || messageType != websocket.TextMessage { // only TextMessage is suppported now
+	var messageType, p, err = cc.ReadMessage()
+	if err != nil || messageType != websocket.BinaryMessage { // only BinaryMessage is suppported now
 		return from, err
 	}
 
@@ -168,7 +172,7 @@ func (cc *ChatConn) Write(newb []byte) (int, error) {
 	for to < n {
 		if b[to] == '\n' {
 			if to-from > 0 {
-				err = cc.Conn.WriteMessage(websocket.TextMessage, b[from:to+1])
+				err = cc.WriteMessage(websocket.TextMessage, b[from:to+1])
 				if err != nil {
 					break
 				}
@@ -190,33 +194,13 @@ func (cc *ChatConn) Write(newb []byte) (int, error) {
 	return len(newb), nil
 }
 
-func (cc *ChatConn) Close() error {
-	return cc.Conn.Close()
-}
-
-func (cc *ChatConn) LocalAddr() net.Addr {
-	return cc.Conn.LocalAddr()
-}
-
-func (cc *ChatConn) RemoteAddr() net.Addr {
-	return cc.Conn.RemoteAddr()
-}
-
 func (cc *ChatConn) SetDeadline(t time.Time) error {
-	var err = cc.Conn.SetReadDeadline(t)
+	var err = cc.SetReadDeadline(t)
 	if err == nil {
-		err = cc.Conn.SetWriteDeadline(t)
+		err = cc.SetWriteDeadline(t)
 	}
 
 	return err
-}
-
-func (cc *ChatConn) SetReadDeadline(t time.Time) error {
-	return cc.Conn.SetReadDeadline(t)
-}
-
-func (cc *ChatConn) SetWriteDeadline(t time.Time) error {
-	return cc.Conn.SetWriteDeadline(t)
 }
 
 //====================================================================
