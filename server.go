@@ -11,11 +11,32 @@ import (
 	"io"
 	"strings"
 	//"bufio"
+	"crypto/rand"
+	mathrand "math/rand"
+	"encoding/base64"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/zonesan/undefined/chat"
 )
+
+func init() {
+	mathrand.Seed(time.Now().UnixNano())
+}
+
+func randomRoomId() string {
+	bs := make([]byte, 8)
+	_, err := rand.Read(bs)
+	if err != nil {
+		mathrand.Read(bs)
+	}
+
+	return string(base64.RawURLEncoding.EncodeToString(bs))
+}
+
+//====================================================================
+// 
+//====================================================================
 
 const (
 	MaxBufferOutputBytes = 1024
@@ -48,6 +69,15 @@ var httpTemplate *template.Template
 var httpContentCache []byte
 
 func httpHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+		
+	if len(r.URL.Path) < 2 {
+		roomId := randomRoomId()
+		http.Redirect(w, r, "/" + roomId, 301)
+		return
+	}
 
 	//>> for debug
 	var httpTemplate *template.Template = nil

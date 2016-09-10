@@ -40,7 +40,7 @@
 //    alert(window.location.pathname)
     var Drawarr = new Array();
     var lastobj = [];
-    var webSocket = new WebSocket('ws://'+location.host + "/ws" + window.location.pathname);
+    var webSocket = new WebSocket('ws://'+window.location.host + "/ws" + window.location.pathname);
 //    var webSocket = new WebSocket('ws://172.18.3.122:1337');
     webSocket.binaryType = 'arraybuffer';
 
