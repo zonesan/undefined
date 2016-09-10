@@ -147,21 +147,18 @@
     }
 
     function start(e, type) {
-        var mouseDown = 1
 //        var data = {name: 'my',color: 'red', type: type, clientX: e.clientX - stage_info.left, clientY: e.clientY - stage_info.top};
         
- 
 
-        if (e.clientX > canvasw 
+        if (type == 'moveup') {
+        } else if (e.clientX > canvasw 
             || e.clientX < 0
             || e.clientY > canvash
             || e.clientY < 0){
             type ='moveup'
-
-        }else{
-            type='movedown'
         }
 
+        var mouseDown = 1
         if (type == 'moveup') {
             mouseDown = 0
         }
@@ -173,7 +170,6 @@
         var y1 = (percentY >> 8) & 0xFF
         var y0 = (percentY >> 0) & 0xFF
         var arr = [0, x1, x0, y1, y0, mouseDown]
-
 
 //        console.log(arr);
         var batesArray = new Uint8Array(arr);
