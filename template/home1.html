@@ -30,20 +30,12 @@
         if (this.callback) this.callback.call(this, item);
     }
 
-
-    function copyText(obj)
-    {
-        var rng = document.body.createTextRange();
-        rng.moveToElementText(obj);
-        rng.scrollIntoView();
-        rng.select();
-        rng.execCommand("Copy");
-        rng.collapse(false);
-
-        alert("复制成功，请粘贴到你的QQ/MSN上发送给你的好友。");   <!--这句根据需要加，可有可无-->
-
-    }
-
+    //    然后你写数组,添加成员时不用push，使用add
+    //    var renderer = PIXI.autoDetectRenderer(800, 600,{backgroundColor : 0x1099bb});
+    //    document.body.appendChild(renderer.view);
+    //
+    //    // create the root of the scene graph
+    //    var stage = new PIXI.Container();
     var Drawarr = new Array();
     var lastobj = [];
     var webSocket = new WebSocket('ws://172.18.3.122:1337');
@@ -103,36 +95,33 @@
 
     var canvas = $(renderer.view)[0]
     var stage = new PIXI.Container();
-    var context = new PIXI.Graphics();
+
     var style = {
-        font : 'bold italic 20px Arial',
-        fill : '#F7EDCA',
-        stroke : '#4a1850',
-        strokeThickness : 5,
-        dropShadow : true,
-        dropShadowColor : '#000000',
-        dropShadowAngle : Math.PI / 6,
-        dropShadowDistance : 6,
-        wordWrap : true,
-        wordWrapWidth : canvasw
+        font: 'bold italic 20px Arial',
+        fill: '#F7EDCA',
+        stroke: '#4a1850',
+        strokeThickness: 5,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 6,
+        wordWrap: true,
+        wordWrapWidth: canvasw
     };
 
-    var richText = new PIXI.Text('姓名:逸杯酒,网址:www.baidu.com',style);
+    var richText = new PIXI.Text('姓名:逸杯酒,网址:www.baidu.com', style);
     richText.x = 20;
     richText.y = 20;
-//    richText.interactive = true;
-//    richText.on('click', onDown);
+
     stage.addChild(richText);
-//    function onDown (eventData) {
-//        copyText('www.baidu.com');
-//    }
-    stage.addChild(context);
 
     renderer.render(stage);
 
     canvas.onmousedown = function (eventdown) {
         start(eventdown, 'movedown');
+        var context = new PIXI.Graphics();
         context.moveTo(eventdown.clientX, eventdown.clientY);
+        stage.addChild(context);
         document.onmousemove = function (eventmove) {
             start(eventmove, 'lineTo');
             context.lineStyle(5, 0x1099bb, 1)
@@ -143,6 +132,35 @@
         };
         document.onmouseup = function (eventup) {
             start(eventup, 'moveup');
+            var count = 1;
+            var blurFilter1 = new PIXI.filters.BlurFilter();
+            context.filters = [blurFilter1];
+            var aid = requestAnimationFrame(animate);
+            renderer.render(stage);
+            function animate() {
+
+                count -= 0.1;
+
+                var blurAmount = count;
+
+
+                blurFilter1.blur = blurAmount;
+
+                renderer.render(stage);
+                console.log(count);
+                if (count < -30) {
+//                    alert(1)
+                    blurFilter1.blur=-100
+                    renderer.render(stage);
+                    window.cancelAnimationFrame(aid);
+                    aid = null
+                    return
+                } else {
+                    requestAnimationFrame(animate);
+                }
+
+            }
+
 //            console.log('onmouseup',eventup.clientX, eventup.clientY);
             document.onmousemove = document.onmouseup = null;
 
