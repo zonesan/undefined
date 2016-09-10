@@ -1,0 +1,14 @@
+undefined:
+  image: golang:1.6.2
+  # build: .
+  expose:
+    - '5678'
+    - '6789'
+  ports:
+    - 5678:5678
+    - 6789:6789
+  volumes:
+    - '.:/go/src/github.com/zonesan/undefined'
+  working_dir: /go/src/github.com/zonesan/undefined
+  # avoid exit
+  command: tail -f /dev/null
