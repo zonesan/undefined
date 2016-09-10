@@ -106,10 +106,11 @@ func (room *Room) run() {
 					ids[index] = int(v.LocalIdInRoom)
 					index++
 				}
+
 				sort.Ints(ids)
-				id := 0
-				for index, id = range ids {
-					if index != id {
+				num := len(ids)
+				for index = 0; index < num; index++ {
+					if index != ids[index] {
 						break
 					}
 				}
