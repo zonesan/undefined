@@ -138,66 +138,39 @@ func (cc *ChatConn) Read(b []byte) (int, error) {
 
 	index := 0
 	n, err := cc.InputBuffer.Read(b)
-
-if n != 0 {
-fmt.Println("000 n = ", n, ", err = ", err)
-}
 	index += n
-	if err == io.EOF {
-//fmt.Println("000 aa err = ", err)
-		//return index, nil
-	} else if err != nil {
-fmt.Println("000 bb err = ", err)
+	if err != nil && err != io.EOF {
 		return index, err
 	}
 
-	//if index == len(b) {
-//fmt.Println("000 cc index = ", index)
-	//	return index, nil
-	//}
-
 	if index > 0 {
-fmt.Println("000 cc index = ", index)
 		return index, nil
 	}
 
 	for {
 		// try to read more message data and cache it
 		messageType, p, err := cc.Conn.ReadMessage()
-fmt.Println("11 messageType=", messageType, ", err=", err, ", p = ", string(p))
-
 		if err != nil && err != io.EOF {
 			return index, err
 		}
-
 		if messageType != websocket.BinaryMessage { // only accept BinaryMessage messages
 			continue
 		}
 
+		// n2 must be len(p) if err2 is nil
 		n2, err2 := cc.InputBuffer.Write(p) // cache it
-
-fmt.Println("22 err2=", err2)
-
 		if err2 != nil {
 			return index, err2
 		}
-
 		if n2 > 0 {
 			break
 		}
-
-		//if len(p) == 0 || err == io.EOF || cc.InputBuffer.Len() >= MaxBufferOutputBytes {
-		//	break
-		//}
 	}
 
 	// read from buffer again
 
 	n, err = cc.InputBuffer.Read(b[index:])
 	index += n
-
-fmt.Println("================== index=", index)
-
 	if err != nil && err != io.EOF {
 		return index, err
 	}
