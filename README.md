@@ -12,17 +12,13 @@
 ========= 命令类型
 
 Command_MousePosition = 0
-Command_MouseDown = 1
-Command_MouseUp = 2
 
 Command_UserInfo = 254
 Command_ServerVersion = 255
 
 ========= 发送格式
 
-[Command_MousePosition, x1, x0, y1, y0]
-[Command_MouseDown]
-[Command_MouseUp]
+[Command_MousePosition, x1, x0, y1, y0, mouseDown]
 
 percentX = (absoluteX / cancasWidth) * 0xFFFF
 x1 = (percentX >> 8) & 0xFF
@@ -34,9 +30,7 @@ y0 = (percentY >> 0) & 0xFF
 
 ========= 接收解析
 
-[Command_MousePosition, x1, x0, y1, y0, userIdInRoom]
-[Command_MouseDown, userIdInRoom]
-[Command_MouseUp, userIdInRoom]
+[Command_MousePosition, x1, x0, y1, y0, mouseDown, userIdInRoom]
 
 absoluteX = cancasWidth * ((x1 << 8) | (x0 << 0)) / 0xFFFF
 absoluteY = cancasHeight * ((y1 << 8) | (y0 << 0)) / 0xFFFF
