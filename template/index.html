@@ -4,11 +4,11 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <title>Canvas聊天板</title>
     <style type="text/css">
-        body, p {
-            margin: 0;
-            padding: 0;
-            color: saddlebrown
-        }
+        * { margin: 0; padding: 0; }
+
+        html, body { height: 100%; width: 100%; }
+
+        canvas { display: block; }
 
     </style>
 
@@ -16,7 +16,7 @@
 <body>
 
 <div id="content">
-    <canvas id="the_stage" width="1200" height="600" style="cursor: crosshair; display: block;margin: 0 auto;border: 1px solid #999;">
+    <canvas id="the_stage">
     </canvas>
 </div>
 <script src="../static/js/jquery-2.1.3.min.js"></script>
@@ -29,16 +29,36 @@
     }
 
     //    然后你写数组,添加成员时不用push，使用add
-
+//    var renderer = PIXI.autoDetectRenderer(800, 600,{backgroundColor : 0x1099bb});
+//    document.body.appendChild(renderer.view);
+//
+//    // create the root of the scene graph
+//    var stage = new PIXI.Container();
     var Drawarr = new Array();
     var lastobj = [];
     var lastzuobiao = {};
     var canvas = document.getElementById('the_stage');
-    var canvasWidth = 1200;
-    var canvasHeight = 600;
-    canvas.setAttribute('width', canvasWidth);
-    canvas.setAttribute('height', canvasHeight);
     var context = canvas.getContext('2d');
+    function resizeCanvas() {
+
+        $(canvas).attr("width", $(window).get(0).innerWidth);
+
+        $(canvas).attr("height", $(window).get(0).innerHeight);
+
+        context.fillStyle="#f0f0f0";
+
+        context.fillRect(0, 0, $(canvas).width(), $(canvas).height());
+
+    };
+    resizeCanvas()
+    var canvasWidth = $(canvas).width();
+    var canvasHeight = $(canvas).height();
+//    canvas.setAttribute('width', canvasWidth);
+//    canvas.setAttribute('height', canvasHeight);
+
+//    $(window).resize(resizeCanvas);
+
+
     var hasmy = false;
     var webSocket = new WebSocket('ws://172.18.3.122:1337');
 
@@ -56,22 +76,10 @@
 
     function onMessage(event) {
         console.log(event);
-////    console.log(JSON.parse(event.data));
-////  '&quot;'
-//        var str = JSON.parse(event.data)
-////    console.log(str.data.length);
-//        if (!str.data.length) {
-//            var newstr = str.data.text.replace(/&quot;/g, '\"');
-////            console.log(JSON.parse(newstr));
-//            var obj=JSON.parse(newstr)
-//            Drawarr.add(obj)
-//
-//        }
 
     }
 
     function onOpen(event) {
-
         console.log(event);
     }
 
