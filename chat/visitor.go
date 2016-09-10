@@ -195,7 +195,7 @@ func (visitor *Visitor) read() {
 			}
 			n, err := visitor.Connection.Read(data[index:dataLength])
 
-//fmt.Println("111 aaaa, ", n, ", err = ", err)
+fmt.Println("111 aaaa, ", n, ", err = ", err)
 			if err != nil { // todo: check io.EOF
 				goto EXIT
 			}
@@ -204,7 +204,7 @@ func (visitor *Visitor) read() {
 				command = int(data[0])
 			}
 
-//fmt.Println("111 bbb, ", command)
+fmt.Println("111 bbb, ", command)
 		case Command_MousePosition:
 			dataLength := 5
 			if index >= dataLength {
@@ -212,7 +212,7 @@ func (visitor *Visitor) read() {
 			}
 			n, err := visitor.Connection.Read(data[index:dataLength])
 
-//fmt.Println("222 aaaa, ", n)
+fmt.Println("222 aaaa, ", n)
 			if err != nil { // todo: check io.EOF
 				goto EXIT
 			}
@@ -221,10 +221,10 @@ func (visitor *Visitor) read() {
 				done = true
 			}
 
-//fmt.Println("222 bbb, ", index)
+fmt.Println("222 bbb, ", index)
 		case Command_MouseDown, Command_MouseUp:
 
-//fmt.Println("333 aaaa, ")
+fmt.Println("333 aaaa, ")
 
 			dataLength := 1
 			if index != dataLength {

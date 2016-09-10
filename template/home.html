@@ -85,8 +85,7 @@
 //        console.log(arr);
         var batesArray = new Uint8Array(arr);
         console.log(batesArray);
-        //webSocket.send(batesArray.buffer);
-        webSocket.send("abc");
+        webSocket.send(batesArray.buffer);
         return false;
     }
     var canvasw = $(window).get(0).innerWidth

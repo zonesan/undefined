@@ -83,13 +83,12 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 //====================================================================
 
 type ChatConn struct { // implement chat.ReadWriteCloser
-	*websocket.Conn
+	Conn *websocket.Conn
 
 	InputBuffer  bytes.Buffer
-	//OutputBuffer bytes.Buffer
+	OutputBuffer bytes.Buffer
 }
 
-/*
 func (cc *ChatConn) ReadFromBuffer(b []byte, from int) int {
 	to := len(b) - from
 	if to > cc.InputBuffer.Len() {
@@ -126,12 +125,10 @@ func (cc *ChatConn) MergeOutputBuffer(newb []byte) []byte {
 
 	return all_b
 }
-*/
 
 //====================================================================
 // ChatConn implements net.Conn
 //====================================================================
-
 
 func (cc *ChatConn) Read(b []byte) (int, error) {
 	// read from buffer
@@ -147,20 +144,27 @@ fmt.Println("000 n = ", n, ", err = ", err)
 }
 	index += n
 	if err == io.EOF {
-		return index, nil
+//fmt.Println("000 aa err = ", err)
+		//return index, nil
 	} else if err != nil {
-fmt.Println("000 err = ", err)
+fmt.Println("000 bb err = ", err)
 		return index, err
 	}
 
-	if index == len(b) {
+	//if index == len(b) {
+//fmt.Println("000 cc index = ", index)
+	//	return index, nil
+	//}
+
+	if index > 0 {
+fmt.Println("000 cc index = ", index)
 		return index, nil
 	}
 
 	for {
 		// try to read more message data and cache it
-		messageType, p, err := cc.ReadMessage()
-fmt.Println("11 messageType=", messageType, ", err=", err)
+		messageType, p, err := cc.Conn.ReadMessage()
+fmt.Println("11 messageType=", messageType, ", err=", err, ", p = ", string(p))
 
 		if err != nil && err != io.EOF {
 			return index, err
@@ -170,7 +174,7 @@ fmt.Println("11 messageType=", messageType, ", err=", err)
 			continue
 		}
 
-		_, err2 := cc.InputBuffer.Write(p) // cache it
+		n2, err2 := cc.InputBuffer.Write(p) // cache it
 
 fmt.Println("22 err2=", err2)
 
@@ -178,15 +182,22 @@ fmt.Println("22 err2=", err2)
 			return index, err2
 		}
 
-		if err == io.EOF || cc.InputBuffer.Len() >= MaxBufferOutputBytes {
+		if n2 > 0 {
 			break
 		}
+
+		//if len(p) == 0 || err == io.EOF || cc.InputBuffer.Len() >= MaxBufferOutputBytes {
+		//	break
+		//}
 	}
 
 	// read from buffer again
 
 	n, err = cc.InputBuffer.Read(b[index:])
 	index += n
+
+fmt.Println("================== index=", index)
+
 	if err != nil && err != io.EOF {
 		return index, err
 	}
@@ -195,17 +206,29 @@ fmt.Println("22 err2=", err2)
 }
 
 /*
-func (cc *ChatConn) Read2(b []byte) (int, error) {
+func (cc *ChatConn) Read(b []byte) (int, error) {
 	var from = 0
 	from = cc.ReadFromBuffer(b, from)
+
+if from != 0 {
+	fmt.Println("from = ", from)
+}
 	if from == len(b) {
 		return from, nil
 	}
+
+if from != 0 {
+	fmt.Println("from = ", from)
+}
 
 	var messageType, p, err = cc.Conn.ReadMessage()
 	if err != nil || messageType != websocket.TextMessage { // only TextMessage is suppported now
 		return from, err
 	}
+
+if len(p) != 0 {
+	fmt.Println("p = ", from)
+}
 
 	_, err = cc.InputBuffer.Write(p)
 	if err != nil {
@@ -224,7 +247,7 @@ func (cc *ChatConn) Read2(b []byte) (int, error) {
 */
 
 func (cc *ChatConn) Write(b []byte) (int, error) {
-	return len(b), cc.WriteMessage(websocket.BinaryMessage, b) // todo: maybe not ok
+	return len(b), cc.Conn.WriteMessage(websocket.BinaryMessage, b) // todo: maybe not ok
 }
 
 /*
@@ -261,6 +284,7 @@ func (cc *ChatConn) Write2(newb []byte) (int, error) {
 }
 */
 
+/*
 func (cc *ChatConn) SetDeadline(t time.Time) error {
 	var err = cc.SetReadDeadline(t)
 	if err == nil {
@@ -268,6 +292,36 @@ func (cc *ChatConn) SetDeadline(t time.Time) error {
 	}
 
 	return err
+}
+*/
+
+func (cc *ChatConn) Close() error {
+	return cc.Conn.Close()
+}
+
+func (cc *ChatConn) LocalAddr() net.Addr {
+	return cc.Conn.LocalAddr()
+}
+
+func (cc *ChatConn) RemoteAddr() net.Addr {
+	return cc.Conn.RemoteAddr()
+}
+
+func (cc *ChatConn) SetDeadline(t time.Time) error {
+	var err = cc.Conn.SetReadDeadline(t)
+	if err == nil {
+		err = cc.Conn.SetWriteDeadline(t)
+	}
+
+	return err
+}
+
+func (cc *ChatConn) SetReadDeadline(t time.Time) error {
+	return cc.Conn.SetReadDeadline(t)
+}
+
+func (cc *ChatConn) SetWriteDeadline(t time.Time) error {
+	return cc.Conn.SetWriteDeadline(t)
 }
 
 //====================================================================
