@@ -29,24 +29,11 @@
         this.push(item);
         if (this.callback) this.callback.call(this, item);
     }
-
-
-    function copyText(obj)
-    {
-        var rng = document.body.createTextRange();
-        rng.moveToElementText(obj);
-        rng.scrollIntoView();
-        rng.select();
-        rng.execCommand("Copy");
-        rng.collapse(false);
-
-        alert("复制成功，请粘贴到你的QQ/MSN上发送给你的好友。");   <!--这句根据需要加，可有可无-->
-
-    }
-
+//    alert(window.location.pathname)
     var Drawarr = new Array();
     var lastobj = [];
-    var webSocket = new WebSocket('ws://172.18.3.122:1337');
+    var webSocket = new WebSocket('ws://'+location.host+window.location.pathname);
+//    var webSocket = new WebSocket('ws://172.18.3.122:1337');
 
     webSocket.onerror = function (event) {
         onError(event);
@@ -122,10 +109,13 @@
     richText.y = 20;
 //    richText.interactive = true;
 //    richText.on('click', onDown);
-    stage.addChild(richText);
+//
 //    function onDown (eventData) {
-//        copyText('www.baidu.com');
+////        copyText('www.baidu.com');
+//        document.execCommand('www.baidu.com'); //执行浏览器复制命令
+//        alert("已复制好，可贴粘。");
 //    }
+    stage.addChild(richText);
     stage.addChild(context);
 
     renderer.render(stage);
