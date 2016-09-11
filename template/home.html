@@ -250,7 +250,8 @@
         var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";
 //        document.writeln("您的浏览设备为：");
         if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM || weixin) {
-//            document.writeln("phone");
+            console.log("phone");
+
             canvas.ontouchstart = function (eventdown) {
                 start(eventdown, 'movedown');
                 // context.moveTo(eventdown.clientX, eventdown.clientY);
@@ -267,7 +268,7 @@
                 };
             };
         } else {
-//            document.writeln("pc");
+            console.log("pc");
             canvas.onmousedown = function (eventdown) {
                 start(eventdown, 'movedown');
                 // context.moveTo(eventdown.clientX, eventdown.clientY);
