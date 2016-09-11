@@ -38,9 +38,8 @@
         this.push(item);
         if (this.callback) this.callback.call(this, item);
     }
+
     //    alert(window.location.pathname)
-    var Drawarr = new Array();
-    var lastobj = [];
     var webSocket = new WebSocket('ws://' + window.location.host + "/ws" + window.location.pathname);
     //    var webSocket = new WebSocket('ws://172.18.3.122:1337');
     webSocket.binaryType = 'arraybuffer';
@@ -91,18 +90,6 @@
 
     var Command_UserInfo = 254
     var Command_ServerVersion = 255
-    /*
-     var command
-     var command = -1
-     var commandDone = false
-     var index = 0
-
-     var reset = function() {
-     command = -1
-     commandDone = false
-     index = 0
-     }
-     */
 
     function onMessage(event) {
         //onsole.log(event);
@@ -126,39 +113,6 @@
                 // console.log("personLastStatus=", personLastStatus)
 
                 if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
-                   var context = new PIXI.Graphics();
-                    var deletecav = new PIXI.DisplayObject()
-                    stage.addChild(context);
-                    setInterval(function () {
-                        var count = 1;
-                        var blurFilter1 = new PIXI.filters.BlurFilter();
-                        context.filters = [blurFilter1];
-                        requestAnimationFrame(animate);
-                        renderer.render(stage);
-                        function animate() {
-
-                            count -= 0.1;
-
-                            var blurAmount = count;
-
-
-                            blurFilter1.blur = blurAmount;
-
-                            renderer.render(stage);
-                            console.log(count);
-                            if (count < -30) {
-                                deletecav.removeChild(context)
-                                blurFilter1.blur=-100
-                                renderer.render(stage);
-                                context = new PIXI.Graphics();
-                                stage.addChild(context);
-                                return
-                            } else {
-                                requestAnimationFrame(animate);
-                            }
-
-                        }
-                    },20000)
                     context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
                     context.lineStyle(5, parseInt(colorArray[userId]), 1);
                     context.lineTo(x, y);
@@ -178,6 +132,64 @@
     function onError(event) {
 
     }
+
+    var canvasw = $(window).get(0).innerWidth
+    var canvash = $(window).get(0).innerHeight
+    var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
+    document.body.appendChild(renderer.view);
+    var canvas = $(renderer.view)[0]
+
+    var stage = new PIXI.Container();
+    renderer.render(stage);
+
+    var style = {
+        font: 'bold italic 20px Arial',
+        fill: '#F7EDCA',
+        stroke: '#4a1850',
+        strokeThickness: 5,
+        dropShadow: true,
+        dropShadowColor: '#000000',
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 6,
+        wordWrap: true,
+        wordWrapWidth: canvasw
+    };
+    var richText = new PIXI.Text(location.href, style);
+    richText.x = 20;
+    richText.y = 20;
+    stage.addChild(richText)
+
+    var renderTexture = new PIXI.RenderTexture(renderer, renderer.width, renderer.height);
+    var renderTexture2 = new PIXI.RenderTexture(renderer, renderer.width, renderer.height);
+    var currentTexture = renderTexture;
+    var outputSprite = new PIXI.Sprite(currentTexture);
+    stage.addChild(outputSprite)
+
+    var context = new PIXI.Graphics();
+    outputSprite.addChild(context)
+
+    // renderer.render(stage);
+
+
+    animate();
+
+    function animate()
+    {
+        requestAnimationFrame(animate);
+
+        var temp = renderTexture;
+        outputSprite.alpha = 0.99
+        renderer.render(outputSprite, renderTexture2);
+        outputSprite.alpha = 1
+
+        renderTexture = renderTexture2;
+        renderTexture2 = temp;
+        outputSprite.texture = renderTexture;
+        context.clear()
+
+        renderer.render(stage);
+    }
+
 
     function start(e, type) {
 //        var data = {name: 'my',color: 'red', type: type, clientX: e.clientX - stage_info.left, clientY: e.clientY - stage_info.top};
@@ -216,43 +228,6 @@
 //        var canvash = $(window).get(0).innerHeight
 //        var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
 //    };
-    var canvasw = $(window).get(0).innerWidth
-    var canvash = $(window).get(0).innerHeight
-    var renderer = PIXI.autoDetectRenderer(canvasw, canvash, {backgroundColor: 0xffffff});
-    document.body.appendChild(renderer.view);
-
-    var canvas = $(renderer.view)[0]
-    var stage = new PIXI.Container();
-    var context = new PIXI.Graphics();
-    var style = {
-        font: 'bold italic 20px Arial',
-        fill: '#F7EDCA',
-        stroke: '#4a1850',
-        strokeThickness: 5,
-        dropShadow: true,
-        dropShadowColor: '#000000',
-        dropShadowAngle: Math.PI / 6,
-        dropShadowDistance: 6,
-        wordWrap: true,
-        wordWrapWidth: canvasw
-    };
-
-    var richText = new PIXI.Text(location.href, style);
-    richText.x = 20;
-    richText.y = 20;
-    //    richText.interactive = true;
-    //    richText.on('click', onDown);
-    //
-    //    function onDown (eventData) {
-    ////        copyText('www.baidu.com');
-    //        document.execCommand('www.baidu.com'); //执行浏览器复制命令
-    //        alert("已复制好，可贴粘。");
-    //    }
-    stage.addChild(richText);
-
-
-    renderer.render(stage);
-
 //    canvas.onmousedown = function (eventdown) {
 //        start(eventdown, 'movedown');
 //        // context.moveTo(eventdown.clientX, eventdown.clientY);
