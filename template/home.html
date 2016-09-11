@@ -126,7 +126,39 @@
                 // console.log("personLastStatus=", personLastStatus)
 
                 if (personLastStatus != null && personLastStatus.mouseDown && mouseDown) {
+                   var context = new PIXI.Graphics();
+                    var deletecav = new PIXI.DisplayObject()
+                    stage.addChild(context);
+                    setInterval(function () {
+                        var count = 1;
+                        var blurFilter1 = new PIXI.filters.BlurFilter();
+                        context.filters = [blurFilter1];
+                        requestAnimationFrame(animate);
+                        renderer.render(stage);
+                        function animate() {
 
+                            count -= 0.1;
+
+                            var blurAmount = count;
+
+
+                            blurFilter1.blur = blurAmount;
+
+                            renderer.render(stage);
+                            console.log(count);
+                            if (count < -30) {
+                                deletecav.removeChild(context)
+                                blurFilter1.blur=-100
+                                renderer.render(stage);
+                                context = new PIXI.Graphics();
+                                stage.addChild(context);
+                                return
+                            } else {
+                                requestAnimationFrame(animate);
+                            }
+
+                        }
+                    },20000)
                     context.moveTo(personLastStatus.mouseX, personLastStatus.mouseY);
                     context.lineStyle(5, parseInt(colorArray[userId]), 1);
                     context.lineTo(x, y);
@@ -217,7 +249,7 @@
     //        alert("已复制好，可贴粘。");
     //    }
     stage.addChild(richText);
-    stage.addChild(context);
+
 
     renderer.render(stage);
 
