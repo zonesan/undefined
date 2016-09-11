@@ -69,14 +69,6 @@ func sendPageData(w http.ResponseWriter, pageDataBytes []byte, contextType strin
 var httpTemplate *template.Template
 var httpContentCache []byte
 
-func RoomsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	respBody, _ := json.MarshalIndent(chatServer.Rooms, "", "  ")
-	w.Write(respBody)
-	return
-}
-
 func httpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
@@ -414,4 +406,31 @@ func main() {
 	go createSocketServer(6789)
 
 	createWebsocketServer(5678)
+}
+
+type RoomsSummary struct {
+	Rooms []RoomInfo
+}
+type RoomInfo struct {
+	Name        string   `json:"name"`
+	Id          string   `json:"id"`
+	Memebers    []string `json:"guests"`
+	MemberCount int      `json:"guest_number"`
+}
+
+func RoomsHandler(w http.ResponseWriter, r *http.Request) {
+	rooms := &RoomsSummary{}
+	room := RoomInfo{}
+	for _, v := range chatServer.Rooms {
+		room.Name = v.Name
+		room.Id = v.ID
+		room.MemberCount = v.Visitors.Len()
+		rooms.Rooms = append(rooms.Rooms, room)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	respBody, _ := json.MarshalIndent(rooms, "", "  ")
+	w.Write(respBody)
+	return
 }
