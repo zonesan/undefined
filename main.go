@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net"
 	"net/http"
-	"time"
-	"io"
 	"strings"
+	"time"
 	//"bufio"
 	"crypto/rand"
-	mathrand "math/rand"
 	"encoding/base64"
+	"encoding/json"
+	mathrand "math/rand"
 
 	"github.com/gorilla/websocket"
 
@@ -35,7 +36,7 @@ func randomRoomId() string {
 }
 
 //====================================================================
-// 
+//
 //====================================================================
 
 const (
@@ -72,10 +73,10 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Expires", "0")
-		
+
 	if len(r.URL.Path) < 2 {
 		roomId := randomRoomId()
-		http.Redirect(w, r, "/" + roomId, 301)
+		http.Redirect(w, r, "/"+roomId, 301)
 		return
 	}
 
@@ -347,7 +348,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if (! strings.HasPrefix(r.URL.Path, PrefixWS)) || len(r.URL.Path) <= len(PrefixWS) {
+	if (!strings.HasPrefix(r.URL.Path, PrefixWS)) || len(r.URL.Path) <= len(PrefixWS) {
 		http.Error(w, "bad uri", 400)
 		return
 	}
@@ -369,6 +370,7 @@ func createWebsocketServer(port int) {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc(PrefixWS, websocketHandler) // /ws/:rommid
 	http.HandleFunc("/", httpHandler)
+	http.HandleFunc("/api/rooms", RoomsHandler)
 
 	var address = fmt.Sprintf(":%d", port)
 	err := http.ListenAndServe(address, nil)
@@ -406,4 +408,31 @@ func main() {
 	go createSocketServer(6789)
 
 	createWebsocketServer(5678)
+}
+
+type RoomsSummary struct {
+	Rooms []RoomInfo
+}
+type RoomInfo struct {
+	Name        string   `json:"name"`
+	Id          string   `json:"id"`
+	Memebers    []string `json:"guests"`
+	MemberCount int      `json:"guest_number"`
+}
+
+func RoomsHandler(w http.ResponseWriter, r *http.Request) {
+	rooms := &RoomsSummary{}
+	room := RoomInfo{}
+	for _, v := range chatServer.Rooms {
+		room.Name = v.Name
+		room.Id = v.ID
+		room.MemberCount = v.Visitors.Len()
+		rooms.Rooms = append(rooms.Rooms, room)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	respBody, _ := json.MarshalIndent(rooms, "", "  ")
+	w.Write(respBody)
+	return
 }
