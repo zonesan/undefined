@@ -119,6 +119,7 @@ type ChatConn struct { // implement chat.ReadWriteCloser
 	OutputBuffer bytes.Buffer
 }
 
+/*
 func (cc *ChatConn) ReadFromBuffer(b []byte, from int) int {
 	to := len(b) - from
 	if to > cc.InputBuffer.Len() {
@@ -155,6 +156,7 @@ func (cc *ChatConn) MergeOutputBuffer(newb []byte) []byte {
 
 	return all_b
 }
+*/
 
 //====================================================================
 // ChatConn implements net.Conn
